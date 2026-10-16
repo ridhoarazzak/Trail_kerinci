@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#14532d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FRESS 2026">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>FRESS Solok Selatan 2026</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <div>
+    <strong>FRESS 2026</strong>
+    <span class="sub">Fun Run &amp; Explore Solok Selatan</span>
+  </div>
+  <span id="netBadge" class="badge">…</span>
+</header>
+
+<main>
+  <!-- PETA -->
+  <section id="tab-peta" class="tab active">
+    <canvas id="map"></canvas>
+    <div class="map-ui">
+      <button id="btnLocate" class="fab" aria-label="Lokasi saya">◎</button>
+      <button id="btnFit" class="fab" aria-label="Lihat semua jalur">⤢</button>
+      <button id="btnTiles" class="fab small" aria-label="Peta dasar">Peta dasar</button>
+    </div>
+    <div id="legend" class="legend"></div>
+    <div id="gpsCard" class="gps-card" hidden></div>
+    <div id="scaleBar" class="scale"></div>
+  </section>
+
+  <!-- POS -->
+  <section id="tab-pos" class="tab">
+    <div class="pad">
+      <h2>Pos &amp; titik penting</h2>
+      <p class="hint">Jarak dihitung sepanjang jalur dari titik awal tiap rute. Ketuk untuk melihat di peta.</p>
+      <div id="posList"></div>
+    </div>
+  </section>
+
+  <!-- INFO -->
+  <section id="tab-info" class="tab">
+    <div class="pad">
+      <h2>Jadwal</h2>
+      <div class="card"><b>12 Desember 2026</b><br>Eksebisi Jalur Pendakian</div>
+      <div class="card"><b>13 Desember 2026</b><br>Fun Trail Run</div>
+
+      <h2>Jalur</h2>
+      <div id="routeStats"></div>
+
+      <h2>Bawa offline</h2>
+      <p>Buka aplikasi ini sekali saat ada sinyal. Setelah muncul tulisan <b>“Siap offline”</b> di atas, aplikasi bisa dipakai tanpa sinyal. Di iPhone: Bagikan → Tambahkan ke Layar Utama. Di Android: menu ⋮ → Instal aplikasi.</p>
+      <p><a class="btn" href="data/jalur_trail_kerinci_fress.gpx" download>Unduh GPX jalur</a></p>
+      <p class="hint">GPX bisa diimpor ke Organic Maps, OsmAnd, atau Locus Map.</p>
+
+      <h2>Perlu diketahui</h2>
+      <div class="warn">
+        <b>Data jalur ini hasil digitasi peta 1:50.000, bukan rekaman GPS.</b>
+        Akurasinya sekitar ±50–100 m. Ada celah scan di jalur Bangunrejo (±800 m) dan Blok E (±900 m) yang disambung garis lurus (ditampilkan putus-putus). Di lapangan, ikuti marka jalur, petunjuk panitia, dan pemandu. Jarak sebenarnya biasanya lebih panjang dari angka di sini karena jalur asli berkelok.
+      </div>
+    </div>
+  </section>
+
+  <!-- DARURAT -->
+  <section id="tab-darurat" class="tab">
+    <div class="pad">
+      <h2>Darurat</h2>
+      <div id="sosCoords" class="card"></div>
+      <div id="contacts"></div>
+      <h3>Jika tersesat atau cedera</h3>
+      <ul class="checks">
+        <li>Berhenti, tetap tenang, dan jangan berpencar dari kelompok.</li>
+        <li>Salin koordinat Anda di atas dan kirim ke panitia atau layanan darurat saat ada sinyal (SMS lebih mudah tembus daripada data).</li>
+        <li>Kalau sinyal tidak ada, tetap di tempat yang terbuka dan mudah terlihat; tiga bunyi peluit berulang adalah tanda minta tolong.</li>
+        <li>Hubungi petugas pos terdekat (lihat tab Pos).</li>
+      </ul>
+    </div>
+  </section>
+</main>
+
+<nav class="tabs">
+  <button data-tab="peta" class="on"><i>🗺</i>Peta</button>
+  <button data-tab="pos"><i>⛺</i>Pos</button>
+  <button data-tab="info"><i>ℹ️</i>Info</button>
+  <button data-tab="darurat"><i>🆘</i>Darurat</button>
+</nav>
+
+<script src="config.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

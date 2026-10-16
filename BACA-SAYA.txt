@@ -1,0 +1,14 @@
+FRESS 2026 - PWA offline
+
+CARA PASANG (gratis, GitHub Pages):
+1. Buat repo GitHub, unggah isi folder ini (index.html di root).
+2. Settings > Pages > Deploy from branch (main, /root).
+3. Bagikan link https://<akun>.github.io/<repo>/ ke peserta.
+   Peserta cukup membuka link sekali saat ada sinyal; setelah badge "Siap offline" muncul, aplikasi jalan tanpa sinyal.
+   (Harus HTTPS agar GPS dan service worker bisa jalan; GitHub Pages sudah HTTPS.)
+
+YANG PERLU DIISI:
+- config.js: tambahkan kontak panitia/medis di "organizers".
+- Kalau jalur diperbarui: ganti data/routes.json (dibuat dari GPX) dan data/*.gpx, lalu naikkan "dataVersion" di config.js.
+
+CATATAN DATA: jalur hasil digitasi peta 1:50.000 (+-50-100 m), ada celah scan di Bangunrejo (+-800 m) dan Blok E (+-900 m).
