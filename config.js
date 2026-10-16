@@ -7,6 +7,14 @@ self.FRESS_CONFIG = {
   ],
   // Contoh: { label: "Panitia / Medis FRESS", number: "08xxxxxxxxxx" }
   organizers: [],
-  // Naikkan setiap kali data jalur diubah agar HP peserta mengambil versi baru.
-  dataVersion: "2026-10-16"
+  // Lapisan kontur (hasil gdal2tiles --xyz). Batas dari GeoTIFF contur_kerinci.tif (WGS84).
+  contour: {
+    dir: "tiles_kerinci",
+    minZ: 10,
+    maxZ: 16,
+    opacity: 0.8,
+    west: 101.1972, east: 101.3359, south: -1.7620, north: -1.6054
+  },
+  // Naikkan setiap kali data jalur atau tile diubah agar HP peserta mengambil versi baru.
+  dataVersion: "2026-10-17"
 };
