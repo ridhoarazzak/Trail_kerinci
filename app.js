@@ -62,9 +62,17 @@ const cv = $('#map'), ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 const view = { cx: 0.5, cy: 0.5, z: 12 };
 let tilesOn = store.get('tiles') === '1';
+let contourOn = store.get('contour') !== '0';       // kontur aktif secara default
 let sel = null;           // waypoint terpilih
 let me = null;            // {lat, lon, acc}
 const tileCache = new Map();
+
+/* lapisan kontur (tile XYZ hasil gdal2tiles --xyz) */
+const CT = Object.assign({
+  dir: 'tiles_kerinci', minZ: 10, maxZ: 16, opacity: 0.8,
+  west: 101.1972, east: 101.3359, south: -1.7620, north: -1.6054
+}, CFG.contour || {});
+const ctCache = new Map();
 
 const scale = () => 256 * Math.pow(2, view.z);
 const sx = (lon) => (wx(lon) - view.cx) * scale() + W / 2;
@@ -119,6 +127,38 @@ function drawTiles(){
     const img = getTile(zi, ((x % n) + n) % n, y);
     if (img) ctx.drawImage(img, (x / n - view.cx) * scale() + W / 2, (y / n - view.cy) * scale() + H / 2, ts + 0.5, ts + 0.5);
   }
+}
+
+/* ---------- kontur: tile lokal, hanya dimuat di dalam batas GeoTIFF ---------- */
+function getContour(z, x, y){
+  const k = z + '/' + x + '/' + y;
+  let t = ctCache.get(k);
+  if (t) return t.ok ? t.img : null;
+  if (t === null) return null;
+  const img = new Image();
+  t = { img, ok: false };
+  img.onload = () => { t.ok = true; schedule(); };
+  img.onerror = () => { t.err = true; };            // tile kosong/tidak ada: lewati saja
+  img.src = `${CT.dir}/${k}.png`;
+  ctCache.set(k, t);
+  if (ctCache.size > 300) ctCache.delete(ctCache.keys().next().value);
+  return null;
+}
+
+function drawContour(){
+  const zi = Math.max(CT.minZ, Math.min(CT.maxZ, Math.round(view.z)));
+  const n = Math.pow(2, zi), ts = scale() / n;
+  const x0 = Math.max(Math.floor(wx(CT.west) * n), Math.floor((view.cx - W / 2 / scale()) * n));
+  const x1 = Math.min(Math.floor(wx(CT.east) * n), Math.floor((view.cx + W / 2 / scale()) * n));
+  const y0 = Math.max(Math.floor(wy(CT.north) * n), Math.floor((view.cy - H / 2 / scale()) * n));
+  const y1 = Math.min(Math.floor(wy(CT.south) * n), Math.floor((view.cy + H / 2 / scale()) * n));
+  if (x1 < x0 || y1 < y0 || (x1 - x0 + 1) * (y1 - y0 + 1) > 80) return;
+  ctx.globalAlpha = CT.opacity;
+  for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+    const img = getContour(zi, x, y);
+    if (img) ctx.drawImage(img, (x / n - view.cx) * scale() + W / 2, (y / n - view.cy) * scale() + H / 2, ts + 0.5, ts + 0.5);
+  }
+  ctx.globalAlpha = 1;
 }
 
 function drawGrid(){
@@ -189,6 +229,7 @@ function draw(){
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   ctx.fillStyle = DARK ? '#1b231d' : '#e9eee4'; ctx.fillRect(0, 0, W, H);
   if (tilesOn) drawTiles();
+  if (contourOn) drawContour();
   drawGrid(); drawRoutes(); drawWaypoints(); drawMe();
   if (tilesOn) { ctx.font = '10px system-ui'; ctx.fillStyle = 'rgba(0,0,0,.6)'; ctx.textAlign = 'right'; ctx.fillText('© OpenStreetMap contributors', W - 6, H - 6); ctx.textAlign = 'left'; }
   updateScale();
@@ -351,24 +392,4 @@ if ('serviceWorker' in navigator) {
 } else badge();
 
 /* ---------- init ---------- */
-$('#btnLocate').onclick = startGps;
-$('#btnFit').onclick = () => { sel = null; renderCard(); fit(); };
-const bt = $('#btnTiles');
-bt.classList.toggle('on', tilesOn);
-bt.onclick = () => {
-  tilesOn = !tilesOn; store.set('tiles', tilesOn ? '1' : '0'); bt.classList.toggle('on', tilesOn); schedule();
-  if (tilesOn && !navigator.onLine) alert('Peta dasar hanya muncul di area yang sudah pernah dibuka saat online. Jalur tetap tampil.');
-};
-new ResizeObserver(resize).observe(cv.parentElement);
-
-fetch('data/routes.json').then(r => r.json()).then(d => {
-  tracks = d.tracks; tracks.forEach(prepTrack);
-  waypoints = d.waypoints.map(w => { const m = toM([w.lat, w.lon]); return Object.assign(w, { mx: m[0], my: m[1] }); });
-  waypoints.forEach(w => { w.track = trackFor(w); w.along = locate(w.track, [w.lat, w.lon]).along; });
-  $('#legend').innerHTML = tracks.map(t => `<div><i style="background:${t.color}"></i>${t.short}</div>`).join('') +
-    '<div><i class="dash" style="background:#333"></i>Celah data (perkiraan)</div>';
-  renderPos(); renderStats(); renderContacts(); renderSos(); resize(); fit();
-}).catch(() => { $('#legend').textContent = 'Data jalur gagal dimuat.'; });
-badge();
-window.__fress = { view, get tracks(){ return tracks; }, get waypoints(){ return waypoints; }, setMe(m){ me = m; renderCard(); renderSos(); schedule(); } };
-})();
+$('#btn
