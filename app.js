@@ -75,7 +75,18 @@ const CT = Object.assign({
 }, CFG.contour || {});
 const ctImg = new Image();
 let ctOk = false;
-ctImg.onload = () => { ctOk = true; schedule(); };
+const ctLevels = [];      // gambar asli + versi diperkecil bertahap (separuh tiap level)
+ctImg.onload = () => {
+  let src = ctImg; ctLevels.push(src);
+  while (src.width > 400) {
+    const c = document.createElement('canvas');
+    c.width = src.width >> 1; c.height = src.height >> 1;
+    c.getContext('2d').drawImage(src, 0, 0, c.width, c.height);
+    ctLevels.push(c); src = c;
+  }
+  ctOk = true; schedule();
+};
+ctImg.onerror = () => { const l = $('#legend'); if (l) l.insertAdjacentHTML('beforeend', '<div>Kontur gagal dimuat</div>'); };
 ctImg.src = CT.file;
 
 const scale = () => 256 * Math.pow(2, view.z);
@@ -138,8 +149,10 @@ function drawContour(){
   if (!ctOk) return;
   const x0 = sx(CT.west), x1 = sx(CT.east), y0 = sy(CT.north), y1 = sy(CT.south);
   if (x1 < 0 || x0 > W || y1 < 0 || y0 > H) return;
+  const tw = (x1 - x0) * DPR;                         // lebar tampil dalam piksel layar
+  const lv = Math.max(0, Math.min(ctLevels.length - 1, Math.floor(Math.log2(ctImg.width / Math.max(tw, 1)))));
   ctx.globalAlpha = CT.opacity;
-  ctx.drawImage(ctImg, x0, y0, x1 - x0, y1 - y0);
+  ctx.drawImage(ctLevels[lv], x0, y0, x1 - x0, y1 - y0);
   ctx.globalAlpha = 1;
 }
 
@@ -400,4 +413,3 @@ fetch('data/routes.json').then(r => r.json()).then(d => {
 badge();
 window.__fress = { view, get tracks(){ return tracks; }, get waypoints(){ return waypoints; }, setMe(m){ me = m; renderCard(); renderSos(); schedule(); } };
 })();
-    
