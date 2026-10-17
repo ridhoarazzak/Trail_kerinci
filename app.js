@@ -61,15 +61,15 @@ const uny = (y) => { const n = Math.PI - 2 * Math.PI * y; return 180 / Math.PI *
 const cv = $('#map'), ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 const view = { cx: 0.5, cy: 0.5, z: 12 };
-let tilesOn = store.get('tiles') === '1';
+let tilesOn = store.get('tiles') !== '0';           // peta dasar aktif secara default
 let contourOn = store.get('contour') !== '0';       // kontur aktif secara default
 let sel = null;           // waypoint terpilih
 let me = null;            // {lat, lon, acc}
 const tileCache = new Map();
 
-/* lapisan kontur (tile XYZ hasil gdal2tiles --xyz) */
+/* lapisan kontur (tile XYZ hasil gdal2tiles --xyz; set tms:true di config.js kalau y terbalik) */
 const CT = Object.assign({
-  dir: 'tiles_kerinci', minZ: 10, maxZ: 16, opacity: 0.8,
+  dir: 'tiles_kerinci', minZ: 10, maxZ: 16, opacity: 0.8, tms: false,
   west: 101.1972, east: 101.3359, south: -1.7620, north: -1.6054
 }, CFG.contour || {});
 const ctCache = new Map();
@@ -134,12 +134,12 @@ function getContour(z, x, y){
   const k = z + '/' + x + '/' + y;
   let t = ctCache.get(k);
   if (t) return t.ok ? t.img : null;
-  if (t === null) return null;
   const img = new Image();
   t = { img, ok: false };
   img.onload = () => { t.ok = true; schedule(); };
   img.onerror = () => { t.err = true; };            // tile kosong/tidak ada: lewati saja
-  img.src = `${CT.dir}/${k}.png`;
+  const yy = CT.tms ? (Math.pow(2, z) - 1 - y) : y;
+  img.src = `${CT.dir}/${z}/${x}/${yy}.png`;
   ctCache.set(k, t);
   if (ctCache.size > 300) ctCache.delete(ctCache.keys().next().value);
   return null;
@@ -162,7 +162,7 @@ function drawContour(){
 }
 
 function drawGrid(){
-  const lonSpan = W / scale() * 360, step = [0.002,0.005,0.01,0.02,0.05,0.1].find(s => lonSpan / s < 9) || 0.1;
+  const lonSpan = W / scale() * 360, step = [0.002,0.005,0.01,0.02,0.05,0.1].find(s => lonSpan / s < 5) || 0.1;
   ctx.lineWidth = 1; ctx.strokeStyle = DARK ? 'rgba(255,255,255,.08)' : 'rgba(0,0,0,.08)';
   ctx.fillStyle = DARK ? 'rgba(255,255,255,.45)' : 'rgba(0,0,0,.4)'; ctx.font = '10px system-ui';
   const lonL = unx(view.cx - W / 2 / scale()), lonR = unx(view.cx + W / 2 / scale());
@@ -418,4 +418,4 @@ fetch('data/routes.json').then(r => r.json()).then(d => {
 badge();
 window.__fress = { view, get tracks(){ return tracks; }, get waypoints(){ return waypoints; }, setMe(m){ me = m; renderCard(); renderSos(); schedule(); } };
 })();
-
+  
