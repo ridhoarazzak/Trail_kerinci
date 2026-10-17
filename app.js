@@ -185,7 +185,7 @@ function drawRoutes(){
   ctx.setLineDash([]);
 }
 
-const KEY = /KERINCI TOP|Pintu Rimbo|Camp1 Bangunrejo|R10|Camp Kapas$|Tugu Yudha/;
+const KEY = /KERINCI TOP|Pintu Rimbo|Camp1 Bangunrejo|R10|Camp Kapas$|Tugu Yudha|Genangan Air/;
 function drawWaypoints(){
   const boxes = [];
   const showAll = view.z >= 14.3;
@@ -404,7 +404,7 @@ new ResizeObserver(resize).observe(cv.parentElement);
 
 fetch('data/routes.json').then(r => r.json()).then(d => {
   tracks = d.tracks; tracks.forEach(prepTrack);
-  waypoints = d.waypoints.map(w => { const m = toM([w.lat, w.lon]); return Object.assign(w, { mx: m[0], my: m[1] }); });
+  waypoints = d.waypoints.concat(CFG.extraWaypoints || []).map(w => { const m = toM([w.lat, w.lon]); return Object.assign(w, { mx: m[0], my: m[1] }); });
   waypoints.forEach(w => { w.track = trackFor(w); w.along = locate(w.track, [w.lat, w.lon]).along; });
   $('#legend').innerHTML = tracks.map(t => `<div><i style="background:${t.color}"></i>${t.short}</div>`).join('') +
     '<div><i class="dash" style="background:#333"></i>Celah data (perkiraan)</div>';
@@ -413,3 +413,4 @@ fetch('data/routes.json').then(r => r.json()).then(d => {
 badge();
 window.__fress = { view, get tracks(){ return tracks; }, get waypoints(){ return waypoints; }, setMe(m){ me = m; renderCard(); renderSos(); schedule(); } };
 })();
+  
