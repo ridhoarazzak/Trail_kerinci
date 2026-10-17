@@ -392,4 +392,30 @@ if ('serviceWorker' in navigator) {
 } else badge();
 
 /* ---------- init ---------- */
-$('#btn
+$('#btnLocate').onclick = startGps;
+$('#btnFit').onclick = () => { sel = null; renderCard(); fit(); };
+const bt = $('#btnTiles');
+bt.classList.toggle('on', tilesOn);
+bt.onclick = () => {
+  tilesOn = !tilesOn; store.set('tiles', tilesOn ? '1' : '0'); bt.classList.toggle('on', tilesOn); schedule();
+  if (tilesOn && !navigator.onLine) alert('Peta dasar hanya muncul di area yang sudah pernah dibuka saat online. Jalur tetap tampil.');
+};
+const bc = $('#btnContour');
+bc.classList.toggle('on', contourOn);
+bc.onclick = () => {
+  contourOn = !contourOn; store.set('contour', contourOn ? '1' : '0'); bc.classList.toggle('on', contourOn); schedule();
+};
+new ResizeObserver(resize).observe(cv.parentElement);
+
+fetch('data/routes.json').then(r => r.json()).then(d => {
+  tracks = d.tracks; tracks.forEach(prepTrack);
+  waypoints = d.waypoints.map(w => { const m = toM([w.lat, w.lon]); return Object.assign(w, { mx: m[0], my: m[1] }); });
+  waypoints.forEach(w => { w.track = trackFor(w); w.along = locate(w.track, [w.lat, w.lon]).along; });
+  $('#legend').innerHTML = tracks.map(t => `<div><i style="background:${t.color}"></i>${t.short}</div>`).join('') +
+    '<div><i class="dash" style="background:#333"></i>Celah data (perkiraan)</div>';
+  renderPos(); renderStats(); renderContacts(); renderSos(); resize(); fit();
+}).catch(() => { $('#legend').textContent = 'Data jalur gagal dimuat.'; });
+badge();
+window.__fress = { view, get tracks(){ return tracks; }, get waypoints(){ return waypoints; }, setMe(m){ me = m; renderCard(); renderSos(); schedule(); } };
+})();
+
