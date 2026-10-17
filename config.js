@@ -1,3 +1,4 @@
+window.onerror = (m, s, l) => { const e = document.getElementById('legend'); if (e) e.textContent = m + ' @' + String(s).split('/').pop() + ':' + l; };
 // Isi/ubah di sini sebelum dipublikasikan. Kontak yang kosong tidak ditampilkan.
 self.FRESS_CONFIG = {
   // Nomor darurat nasional Indonesia.
