@@ -19,5 +19,5 @@ self.FRESS_CONFIG = {
     south: -1.7620013347658026, north: -1.60542498074377
   },
   // Naikkan setiap kali data jalur atau berkas peta diubah agar HP peserta mengambil versi baru.
-  dataVersion: "2026-10-17e"
+  dataVersion: "2026-10-17f"
 };
