@@ -11,6 +11,34 @@
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <title>Peta Jalur Pendakian Kerinci via Solok Selatan · Prototipe</title>
 <link rel="stylesheet" href="style.css">
+<style>
+  /* === PROFIL ELEVASI (tambahan) === */
+  #profilToggle {
+    position: absolute; left: 50%; transform: translateX(-50%); bottom: 14px; z-index: 30;
+    display: flex; align-items: center; gap: 8px; padding: 10px 16px; border: 0;
+    border-radius: 999px; background: #14532d; color: #fff; font: inherit;
+    font-size: 14px; font-weight: 600; box-shadow: 0 2px 10px rgba(0,0,0,.3); cursor: pointer;
+  }
+  #profilToggle svg { width: 18px; height: 18px; }
+  #tab-peta.profil-open #profilToggle { display: none; }
+  #profilSheet {
+    position: absolute; left: 0; right: 0; bottom: 0; z-index: 40;
+    max-width: 640px; margin: 0 auto; background: #fbfbf8;
+    border-radius: 16px 16px 0 0; box-shadow: 0 -4px 18px rgba(0,0,0,.22);
+    transform: translateY(110%); transition: transform .22s ease; visibility: hidden;
+  }
+  #tab-peta.profil-open #profilSheet { transform: none; visibility: visible; }
+  @media (prefers-reduced-motion: reduce) { #profilSheet { transition: none; } }
+  #profilSheet .sheet-bar {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px 0; font-size: 14px; font-weight: 650; color: #14301f;
+  }
+  #profilSheet .sheet-close {
+    border: 0; background: #e9ede6; color: #14301f; width: 30px; height: 30px;
+    border-radius: 50%; font-size: 18px; line-height: 1; cursor: pointer;
+  }
+  #profilSheet .kep { border-radius: 0; padding-top: 6px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+</style>
 </head>
 <body>
 <header class="top">
@@ -34,6 +62,20 @@
     <div id="legend" class="legend"></div>
     <div id="gpsCard" class="gps-card" hidden></div>
     <div id="scaleBar" class="scale"></div>
+
+    <!-- PROFIL ELEVASI -->
+    <button id="profilToggle" type="button" aria-controls="profilSheet">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 18l5-8 4 5 3-4 6 7z"/></svg>
+      Profil elevasi
+    </button>
+    <section id="profilSheet" aria-label="Profil elevasi jalur">
+      <div class="sheet-bar">
+        <span>Profil elevasi</span>
+        <button class="sheet-close" type="button" aria-label="Tutup profil elevasi">×</button>
+      </div>
+      <div id="profil"></div>
+    </section>
   </section>
 
   <!-- POS -->
@@ -95,6 +137,34 @@
 
 <script src="config.js"></script>
 <script src="app.js"></script>
+<script src="elevation-profile.js"></script>
+<script>
+/* === PROFIL ELEVASI (tambahan) ===
+   Peta Anda berupa <canvas> sendiri, jadi penanda posisi dikirim lewat event:
+   'kep:hover' {lat, lon, dist, ele, grade} dan 'kep:leave'.
+   app.js perlu mendengarkan dua event ini untuk menggambar titik di kanvas. */
+(function () {
+  var tab = document.getElementById('tab-peta'), mounted = false;
+  function open() {
+    tab.classList.add('profil-open');
+    if (!mounted) {
+      mounted = true;
+      KerinciElevation.mount({
+        container: '#profil',
+        gpxUrl: 'data/jalur_trail_kerinci_fress.gpx',
+        onHover: function (p) { window.dispatchEvent(new CustomEvent('kep:hover', { detail: p })); },
+        onLeave: function () { window.dispatchEvent(new CustomEvent('kep:leave')); }
+      });
+    }
+  }
+  function close() {
+    tab.classList.remove('profil-open');
+    window.dispatchEvent(new CustomEvent('kep:leave'));
+  }
+  document.getElementById('profilToggle').addEventListener('click', open);
+  document.querySelector('#profilSheet .sheet-close').addEventListener('click', close);
+})();
+</script>
 </body>
-  </html>
+    </html>
   
