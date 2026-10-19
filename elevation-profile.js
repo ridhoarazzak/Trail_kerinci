@@ -222,6 +222,11 @@
     host.appendChild(root);
 
     var state = { views: [], active: 0, prof: null, idx: null, waypoints: [] };
+    state.me = null; state.paintMe = null;
+    window.addEventListener('kep:me', function (e) {
+      state.me = e.detail;
+      if (state.paintMe) state.paintMe();
+    });
 
     function msg(text, retry) {
       root.innerHTML = '';
@@ -247,9 +252,10 @@
         var g = parseGPX(txt);
         if (!g.tracks.length) throw new Error('GPX tidak berisi jalur');
         state.waypoints = g.waypoints;
-        var all = [].concat.apply([], g.tracks.map(function (t) { return t.pts; }));
-        var views = [{ name: 'Semua', pts: all }];
-        if (g.tracks.length > 1) g.tracks.forEach(function (t) { views.push({ name: t.name, pts: t.pts }); });
+        var views = g.tracks
+          .filter(function (t) { return !/blok\s*e/i.test(t.name); })
+          .map(function (t) { return { name: t.name, pts: t.pts }; });
+        if (!views.length) throw new Error('GPX tidak berisi jalur');
         return Promise.all(views.map(function (v) {
           var rs = resample(v.pts, 400);
           if (rs.hasEle) return { name: v.name, prof: finalize(rs.samples) };
@@ -282,6 +288,7 @@
     function draw() {
       var view = state.views[state.active], P = view.prof;
       state.prof = P;
+      state.paintMe = null;
       root.innerHTML = '';
 
       // tab jalur
@@ -402,6 +409,7 @@
         svgEl.appendChild(cross); svgEl.appendChild(dot);
         chart.appendChild(svgEl);
         if (state.idx !== null) show(state.idx, true);
+        if (state.paintMe) state.paintMe();
       }
 
       function show(i, silent) {
@@ -436,13 +444,35 @@
         return Math.round(Math.max(0, Math.min(1, f)) * (P.s.length - 1));
       }
 
+      /* posisi GPS pengguna pada grafik */
+      var meG = null, meLine = document.createElement('div');
+      meLine.style.cssText = 'font-size:12px;margin:6px 0 0;color:#2563eb;font-weight:600;min-height:16px';
+      root.appendChild(meLine);
+      function paintMe() {
+        if (meG && meG.parentNode) meG.parentNode.removeChild(meG);
+        meG = null; meLine.textContent = '';
+        if (!state.me || !svgEl || !build.X) return;
+        var best = 0, bd = Infinity;
+        for (var k = 0; k < P.s.length; k++) {
+          var dd = hav({ lat: P.lat[k], lon: P.lon[k] }, state.me);
+          if (dd < bd) { bd = dd; best = k; }
+        }
+        if (bd > 250) {
+          meLine.textContent = 'Posisi Anda ' + (bd >= 1000 ? fmt(bd / 1000, 1) + ' km' : Math.round(bd) + ' m') + ' dari jalur ini';
+          return;
+        }
+        var x = build.X(P.s[best]), y = build.Y(P.ele[best]);
+        meG = svg('g', {});
+        meG.appendChild(svg('circle', { cx: x, cy: y, r: 11, fill: '#2563eb', 'fill-opacity': '.2' }));
+        meG.appendChild(svg('circle', { cx: x, cy: y, r: 6, fill: '#2563eb', stroke: '#fff', 'stroke-width': 2.5 }));
+        svgEl.appendChild(meG);
+        meLine.textContent = 'Posisi Anda: km ' + fmt(P.s[best] / 1000, 1) + ' · ' + fmt(Math.round(P.ele[best])) +
+          ' m · sisa ' + fmt((P.total - P.s[best]) / 1000, 1) + ' km';
+      }
+      state.paintMe = paintMe;
+
       chart.addEventListener('pointerdown', function (e) { show(idxFromEvent(e)); });
       chart.addEventListener('pointermove', function (e) {
         if (e.pointerType === 'mouse' || e.buttons) show(idxFromEvent(e));
       });
       chart.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') clear(); });
-      chart.addEventListener('keydown', function (e) {
-        var cur = state.idx === null ? 0 : state.idx, k = e.shiftKey ? 10 : 1;
-        if (e.key === 'ArrowRight') { show(cur + k); e.preventDefault(); }
-        else if (e.key === 'ArrowLeft') { show(cur - k); e.preventDefault(); }
-        else i
