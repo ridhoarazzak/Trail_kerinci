@@ -4,10 +4,9 @@ const VER = CFG.dataVersion || '1';
 const SHELL = 'fress-shell-' + VER;
 const TILES = 'fress-tiles-v1';
 const CONTOUR_FILE = (CFG.contour && CFG.contour.file) || 'kontur_kerinci.png';
-const FILES = ['./', 'index.html', 'style.css', 'app.js', 'config.js', 'manifest.webmanifest',
+const FILES = ['./', 'index.html', 'style.css', 'app.js', 'elevation-profile.js', 'config.js', 'manifest.webmanifest',
   'data/routes.json', 'data/jalur_trail_kerinci_fress.gpx', CONTOUR_FILE,
   'icons/icon-192.png', 'icons/icon-512.png'];
-
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(SHELL).then(c => c.addAll(FILES)).then(() => self.skipWaiting())
