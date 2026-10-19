@@ -313,7 +313,8 @@ function startGps(){
   watchId = navigator.geolocation.watchPosition(pos => {
     me = { lat: pos.coords.latitude, lon: pos.coords.longitude, acc: pos.coords.accuracy || 0 };
     if (!centered) { centered = true; view.cx = wx(me.lon); view.cy = wy(me.lat); view.z = Math.max(view.z, 15.5); }
-    renderCard(); renderSos(); schedule();
+        dispatchEvent(new CustomEvent('kep:me', { detail: me }));
+    renderCard(); renderSos(); schedule(); 
   }, err => {
     watchId = null; $('#btnLocate').classList.remove('on');
     alert(err.code === 1 ? 'Izin lokasi ditolak. Aktifkan izin lokasi untuk situs ini di pengaturan browser.' : 'Lokasi belum didapat. Coba di tempat terbuka.');
